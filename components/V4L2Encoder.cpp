@@ -26,6 +26,7 @@ namespace android {
 
 namespace {
 
+//const VideoPixelFormat kInputPixelFormat = VideoPixelFormat::RGBA;
 const VideoPixelFormat kInputPixelFormat = VideoPixelFormat::NV12;
 
 // The maximum size for output buffer, which is chosen empirically for a 1080p video.
@@ -463,7 +464,7 @@ bool V4L2Encoder::configureInputFormat(VideoPixelFormat inputFormat, uint32_t st
 
     // First try to use the requested pixel format directly.
     std::optional<struct v4l2_format> format;
-    auto fourcc = Fourcc::fromVideoPixelFormat(inputFormat, false);
+    auto fourcc = Fourcc::fromVideoPixelFormat(inputFormat, true);
     if (fourcc) {
         format = mInputQueue->setFormat(fourcc->toV4L2PixFmt(), mVisibleSize, 0, stride);
     }
@@ -665,8 +666,8 @@ bool V4L2Encoder::configureBitrateMode(C2Config::bitrate_mode_t bitrateMode) {
     ALOGV("%s()", __func__);
     ALOG_ASSERT(mTaskRunner->RunsTasksInCurrentSequence());
 
-    v4l2_mpeg_video_bitrate_mode v4l2BitrateMode =
-            V4L2Device::C2BitrateModeToV4L2BitrateMode(bitrateMode);
+    v4l2_mpeg_video_bitrate_mode v4l2BitrateMode {};
+            //V4L2Device::C2BitrateModeToV4L2BitrateMode(bitrateMode);
     if (!mDevice->setExtCtrls(V4L2_CTRL_CLASS_MPEG,
                               {V4L2ExtCtrl(V4L2_CID_MPEG_VIDEO_BITRATE_MODE, v4l2BitrateMode)})) {
         // TODO(b/190336806): Our stack doesn't support bitrate mode changes yet. We default to CBR
@@ -737,8 +738,10 @@ bool V4L2Encoder::enqueueInputBuffer(std::unique_ptr<InputFrame> frame) {
     ALOG_ASSERT(mInputQueue->freeBuffersCount() > 0);
     ALOG_ASSERT(mState == State::ENCODING);
     ALOG_ASSERT(frame);
-    ALOG_ASSERT(mInputLayout->mFormat == frame->pixelFormat());
+//    ALOG_ASSERT(mInputLayout->mFormat == frame->pixelFormat());
     ALOG_ASSERT(mInputLayout->mPlanes.size() == frame->planes().size());
+
+    ALOGI("InputLayout fmt: %s, FramePixFmt: %s", videoPixelFormatToString(mInputLayout->mFormat).c_str(), videoPixelFormatToString(frame->pixelFormat()).c_str());
 
     auto format = frame->pixelFormat();
     auto planes = frame->planes();

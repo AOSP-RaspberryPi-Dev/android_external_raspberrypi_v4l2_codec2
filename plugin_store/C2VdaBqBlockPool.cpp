@@ -931,6 +931,7 @@ c2_status_t C2VdaBqBlockPool::requestNewBufferSet(int32_t bufferCount, uint32_t 
     if (mImpl) {
         return mImpl->requestNewBufferSet(bufferCount, width, height, format, usage);
     }
+    ALOGE("No init!!!");
     return C2_NO_INIT;
 }
 

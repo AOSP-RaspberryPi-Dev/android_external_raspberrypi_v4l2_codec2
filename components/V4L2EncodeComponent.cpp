@@ -643,6 +643,8 @@ bool V4L2EncodeComponent::initializeEncoder() {
     // the V4L2 encoder.
     std::optional<uint32_t> stride =
             getVideoFrameStride(kInputPixelFormat, mInterface->getInputVisibleSize());
+
+    stride = 32;
     if (!stride) {
         ALOGE("Failed to get video frame stride");
         reportError(C2_CORRUPTED);
@@ -677,7 +679,7 @@ bool V4L2EncodeComponent::initializeEncoder() {
                                     V4L2Encoder::kInputBufferCount, mEncoder->codedSize());
     if (!mInputFormatConverter) {
         ALOGE("Failed to created input format convertor");
-        return false;
+        //return false;
     }
 
     return true;
@@ -691,7 +693,7 @@ bool V4L2EncodeComponent::updateEncodingParameters() {
     // framework doesn't offer a parameter to configure the peak bitrate, so we'll use a multiple of
     // the target bitrate here. The peak bitrate is only used if the bitrate mode is set to VBR.
     uint32_t bitrate = mInterface->getBitrate();
-    if (mBitrate != bitrate) {
+    //if (mBitrate != bitrate) {
         ALOG_ASSERT(bitrate > 0u);
         ALOGV("Setting bitrate to %u", bitrate);
         if (!mEncoder->setBitrate(bitrate)) {
@@ -706,20 +708,20 @@ bool V4L2EncodeComponent::updateEncodingParameters() {
             // errors for now.
             mEncoder->setPeakBitrate(bitrate * kPeakBitrateMultiplier);
         }
-    }
+    //}
 
     // Ask device to change framerate if it's different from the currently configured framerate.
-    uint32_t framerate = static_cast<uint32_t>(std::round(mInterface->getFramerate()));
-    if (mFramerate != framerate) {
-        ALOG_ASSERT(framerate > 0u);
-        ALOGV("Setting framerate to %u", framerate);
-        if (!mEncoder->setFramerate(framerate)) {
-            ALOGE("Requesting framerate change failed");
-            reportError(C2_CORRUPTED);
-            return false;
-        }
-        mFramerate = framerate;
-    }
+    //uint32_t framerate = static_cast<uint32_t>(std::round(mInterface->getFramerate()));
+    // if (mFramerate != framerate) {
+    //     ALOG_ASSERT(framerate > 0u);
+    //     ALOGV("Setting framerate to %u", framerate);
+    //     if (!mEncoder->setFramerate(framerate)) {
+    //         ALOGE("Requesting framerate change failed");
+    //         reportError(C2_CORRUPTED);
+    //         return false;
+    //     }
+    //     mFramerate = framerate;
+    // }
 
     // Check whether an explicit key frame was requested, if so reset the key frame counter to
     // immediately request a key frame.
@@ -757,8 +759,7 @@ bool V4L2EncodeComponent::encode(C2ConstGraphicBlock block, uint64_t index, int6
     constexpr int64_t kMaxFramerateDiff = 5;
     if (mLastFrameTime && (timestamp > *mLastFrameTime)) {
         int64_t newFramerate = std::max(
-                static_cast<int64_t>(std::round(1000000.0 / (timestamp - *mLastFrameTime))),
-                static_cast<int64_t>(1LL));
+                static_cast<int64_t>(std::round(1000000.0 / (timestamp - *mLastFrameTime))), static_cast<int64_t>(1));
         if (abs(mFramerate - newFramerate) > kMaxFramerateDiff) {
             ALOGV("Adjusting framerate to %" PRId64 " based on frame timestamps", newFramerate);
             mInterface->setFramerate(static_cast<uint32_t>(newFramerate));

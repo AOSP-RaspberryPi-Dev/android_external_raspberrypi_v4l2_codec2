@@ -23,15 +23,14 @@
 namespace android {
 namespace {
 
-constexpr size_t kNumInputBuffers = 16;
+constexpr size_t kNumInputBuffers = 4;
 // Extra buffers for transmitting in the whole video pipeline.
 constexpr size_t kNumExtraOutputBuffers = 4;
 
 // Currently we only support flexible pixel 420 format YCBCR_420_888 in Android.
 // Here is the list of flexible 420 format.
 constexpr std::initializer_list<uint32_t> kSupportedOutputFourccs = {
-        Fourcc::YU12, Fourcc::YV12, Fourcc::YM12, Fourcc::YM21,
-        Fourcc::NV12, Fourcc::NV21, Fourcc::NM12, Fourcc::NM21,
+        Fourcc::NV12,
 };
 
 uint32_t VideoCodecToV4L2PixFmt(VideoCodec codec) {
@@ -94,7 +93,7 @@ V4L2Decoder::~V4L2Decoder() {
 bool V4L2Decoder::start(const VideoCodec& codec, const size_t inputBufferSize,
                         const size_t minNumOutputBuffers, GetPoolCB getPoolCb, OutputCB outputCb,
                         ErrorCB errorCb) {
-    ALOGV("%s(codec=%s, inputBufferSize=%zu, minNumOutputBuffers=%zu)", __func__,
+    ALOGE("%s(codec=%s, inputBufferSize=%zu, minNumOutputBuffers=%zu)", __func__,
           VideoCodecToString(codec), inputBufferSize, minNumOutputBuffers);
     ALOG_ASSERT(mTaskRunner->RunsTasksInCurrentSequence());
 
@@ -559,6 +558,11 @@ bool V4L2Decoder::changeResolution() {
 bool V4L2Decoder::setupOutputFormat(const ui::Size& size) {
     for (const uint32_t& pixfmt :
          mDevice->enumerateSupportedPixelformats(V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE)) {
+        ALOGV("Available pixel format %s", fourccToString(pixfmt).c_str());
+    }
+
+    for (const uint32_t& pixfmt :
+         mDevice->enumerateSupportedPixelformats(V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE)) {
         if (std::find(kSupportedOutputFourccs.begin(), kSupportedOutputFourccs.end(), pixfmt) ==
             kSupportedOutputFourccs.end()) {
             ALOGD("Pixel format %s is not supported, skipping...", fourccToString(pixfmt).c_str());
@@ -566,6 +570,7 @@ bool V4L2Decoder::setupOutputFormat(const ui::Size& size) {
         }
 
         if (mOutputQueue->setFormat(pixfmt, size, 0) != std::nullopt) {
+            ALOGV("Set pixel format %s", fourccToString(pixfmt).c_str());
             return true;
         }
     }
