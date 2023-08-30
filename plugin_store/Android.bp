@@ -10,6 +10,7 @@ package {
 cc_library_shared {
     name: "libc2plugin_store",
     vendor: true,
+    exclude_from_vendor_snapshot: true,
 
     defaults: [
         "libcodec2-impl-defaults",

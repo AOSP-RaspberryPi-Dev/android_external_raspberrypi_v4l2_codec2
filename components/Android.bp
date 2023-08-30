@@ -10,6 +10,7 @@ package {
 cc_library {
     name: "libv4l2_codec2_components",
     vendor: true,
+    exclude_from_vendor_snapshot: true,
 
     defaults: [
         "libcodec2-hidl-defaults",

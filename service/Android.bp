@@ -15,6 +15,7 @@ cc_binary {
         "libcodec2-hidl-defaults",
     ],
     vendor: true,
+    exclude_from_vendor_snapshot: true,
     relative_install_path: "hw",
 
     srcs: [
