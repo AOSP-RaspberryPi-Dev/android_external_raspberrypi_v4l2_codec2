@@ -33,7 +33,7 @@ cc_binary {
 
     required: ["android.hardware.media.c2@1.2-default-seccomp_policy"],
 
-    compile_multilib: "both",
+    compile_multilib: "64",
     multilib: {
         lib32: {
             suffix: "-32",
